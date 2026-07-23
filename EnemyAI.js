@@ -261,7 +261,7 @@ function thug2ShootProjectile(scene, thug, time) {
         proj.play('thug02Projectile', true);
 
         // Velocity travels directly along the X axis
-        const projSpeed = isFacingLeft ? -430 : 430;
+        const projSpeed = isFacingLeft ? -435 : 435;
         proj.setVelocity(projSpeed, 0);
     });
 
