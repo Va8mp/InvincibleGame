@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invincible Game — Atom Eve</title>
+    <style>
+        @font-face {
+            font-family: 'Pixelated';
+            src: url('Assets/Fonts/Pixelated.ttf') format('truetype');
+        }
+        body {
+            margin: 0;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+    </style>
+
+    <script src="phaser.js"></script>
+
+    <!-- Game modules — ORDER MATTERS -->
+    <script src="Preload.js"></script>
+    <script src="HUD.js"></script>
+    <script src="Eve.js"></script>
+    <script src="EnemyAI.js"></script>
+    <script src="InvincibleGame.js"></script>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 1920,
+            height: 1080,
+            pixelArt: true,
+            scene: InvincibleGame,
+            physics: {
+                default: 'arcade',
+                arcade: { gravity: { y: 0 } }
+            }
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>

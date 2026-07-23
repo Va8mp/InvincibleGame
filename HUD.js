@@ -1,0 +1,184 @@
+// =============================================================================
+//  HUD.js — All HUD elements and update logic
+//  Call createHUD(scene) from create(), updateHUD(scene) from update()
+// =============================================================================
+
+function createHUD(scene) {
+
+    // ── Total score from killig enemies ─────────────────────────────────────────────────────
+        scene.hudPanel = scene.add.rectangle(750, 180, 450, 60, 0x000000, 0.6) //Score Box
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(20);
+
+    scene.hudScore = scene.add.text(900, 195, 'Total Score: 0', {
+        fontFamily: 'Pixelated', fontSize: '32px', color: '#ffffff'
+    }).setScrollFactor(0).setDepth(23);
+
+    // ── HP Bar (top-left) ─────────────────────────────────────────────────────
+    // Panel is wider to fit the shield icon on the left.
+    scene.hudPanel = scene.add.rectangle(250, 115.5, 450, 60, 0x000000, 0.6)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(20);
+
+    scene.hudPanel = scene.add.rectangle(717, 115.5, 450, 60, 0x000000, 0.6)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(20);
+    // ──────────────────────────────────────────────────────────────────────────────────
+    //Logo of Eve nexts to her HP if she is selected.
+    scene.markHP = scene.add.image(720, 147, 'markHPLogo')
+        .setOrigin(0, 0.5)
+        .setScrollFactor(0)
+        .setDepth(24)
+        .setScale(0.8);
+    
+    // MARK COMING SOON
+    scene.markText = scene.add.text(790, 130, 'COMING SOON...', {
+        fontFamily: 'Pixelated', fontSize: '32px', color: '#ffffff'
+    }).setScrollFactor(0).setDepth(23);
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+    //Logo of Eve nexts to her HP if she is selected.
+    scene.eveHP = scene.add.image(255, 145, 'eveHPLogo')
+        .setOrigin(0, 0.5)
+        .setScrollFactor(0)
+        .setDepth(24)
+        .setScale(0.8);
+
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+    // HP bar shifted right to sit beside the icon
+    scene.hudBarBG = scene.add.rectangle(315, 125, 280, 18, 0x550000)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(21);
+
+    scene.hudBar = scene.add.rectangle(315, 125, 280, 18, 0xff44cc)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
+
+    // HP text shifted right inside the HP
+    scene.hudText = scene.add.text(325, 125, 'EVE  HP: 100 / 100', {
+        fontFamily: 'Pixelated', fontSize: '18px', color: '#ffffff'
+    }).setScrollFactor(0).setDepth(23);
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+    ///Energy Bar for Eve shifted below the HP Bar.
+    scene.energyBarBG = scene.add.rectangle(315, 150, 280, 18, 0x00345C)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(21);
+
+    scene.energyBar = scene.add.rectangle(315, 150, 280, 18, 0x008AFF)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
+
+    // Energy text shifted right inside the EnergyBar
+    scene.energyText = scene.add.text(325, 150, 'Energy: 100 / 100', {
+        fontFamily: 'Pixelated', fontSize: '18px', color: '#ffffff'
+    }).setScrollFactor(0).setDepth(23);
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+    // ── Volume Bar (top-right) ────────────────────────────────────────────────
+    scene.volPanel = scene.add.rectangle(1650, 120, 260, 60, 0x000000, 0.6)
+        .setOrigin(1, 0).setScrollFactor(0).setDepth(20);
+
+    scene.volBarBG = scene.add.rectangle(1400, 145, 220, 14, 0x333333)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(21);
+
+    scene.volBar = scene.add.rectangle(1400, 145, 220 * scene.musicVolume, 14, 0xffdd00)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
+
+    scene.volText = scene.add.text(1400, 124, 'VOL:  +  /  -  |  M: mute', {
+        fontFamily: 'Pixelated', fontSize: '15px', color: '#ffffff'
+    }).setScrollFactor(0).setDepth(23);
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+    // ── Game Over Overlay (hidden until Eve dies) ─────────────────────────────
+    scene.gameOverOverlay = scene.add.rectangle(960, 540, 1920, 1080, 0x000000, 0.75)
+        .setScrollFactor(0).setDepth(50).setVisible(false);
+
+    scene.gameOverTitle = scene.add.text(960, 420, 'GAME OVER', {
+        fontFamily: 'Pixelated',
+        fontSize: '160px',
+        color: '#ff1111',
+        stroke: '#000000',
+        strokeThickness: 12,
+        align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    scene.gameOverSub = scene.add.text(960, 590, 'Atom Eve has fallen.', {
+        fontFamily: 'Pixelated', fontSize: '36px', color: '#ffaaaa', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    scene.totalScoreEnd = scene.add.text(960, 630, 'Total Score: ' + scene.totalScore, {
+        fontFamily: 'Pixelated', fontSize: '36px', color: '#ffaaaa', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    scene.gameOverHint = scene.add.text(960, 660, 'Press  R  to restart', {
+        fontFamily: 'Pixelated', fontSize: '28px', color: '#ffffff', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+}
+    // ──────────────────────────────────────────────────────────────────────────────────
+
+// Called every frame from update()
+function updateHUD(scene) {
+    const pct = Phaser.Math.Clamp(scene.currentHP / scene.maxHP, 0, 1); //Calculates the current value to shrink the Bar.
+    scene.hudBar.setSize(280 * pct, 18);
+
+    const energy = Phaser.Math.Clamp(scene.currentEnergy / scene.maxEnergy, 0, 1); //Calculates the current value to shrink the Bar.
+    scene.energyBar.setSize(280 * energy, 18);
+
+    let scoreEnd = scene.totalScore; //Calculates the current value to shrink the Bar.
+    scene.totalScoreEnd.setText('Total Score: ' + scene.totalScore); //Updates total Score.
+
+    // Colour shifts pink → orange → red as HP drops
+    if (pct > 0.6)      { scene.hudBar.setFillStyle(0xff44cc); }
+    else if (pct > 0.3) { scene.hudBar.setFillStyle(0xff9900); }
+    else                { scene.hudBar.setFillStyle(0xff2200); }
+
+    scene.hudText.setText('EVE  HP: ' + scene.currentHP + ' / ' + scene.maxHP); //Updates Eve's current HP.
+
+    scene.energyText.setText('Energy: ' + scene.currentEnergy + ' / ' + scene.maxEnergy); //Updates Eve's current Energy.
+
+    scene.hudScore.setText('Total Score: ' + scene.totalScore); //Updates total Score.
+
+    if (scene.currentHP > 100) {
+        scene.currentHP = 100;
+    }
+
+    if (scene.totalScore == 100) {
+
+        scene.hasShield = true;
+
+        scene.shieldIcon = scene.add.image(620, 140, 'shieldLogo')
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0)
+            .setDepth(24)
+            .setScale(0.5);
+    }
+
+    if (scene.totalScore == 200) {
+
+        scene.hasHealing = true;
+
+        scene.healingIcon = scene.add.image(660, 140, 'healingLogo')
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0)
+            .setDepth(24)
+            .setScale(0.5);
+    }
+}
+
+// Called when volume changes
+function updateVolHUD(scene) {
+    const pct = Phaser.Math.Clamp(scene.musicVolume, 0, 1);
+    scene.volBar.setSize(220 * pct, 14);
+    scene.volBar.setFillStyle(pct === 0 ? 0x555555 : 0xffdd00);
+}
+
+// Show the game over screen and pulse the title
+function showGameOver(scene) {
+    scene.gameOverOverlay.setVisible(true);
+    scene.gameOverTitle.setVisible(true);
+    scene.totalScoreEnd.setVisible(true);
+    scene.gameOverSub.setVisible(true);
+    scene.gameOverHint.setVisible(true);
+
+    scene.tweens.add({
+        targets: scene.gameOverTitle,
+        scaleX: 1.05, scaleY: 1.05,
+        yoyo: true, repeat: -1, duration: 600,
+        ease: 'Sine.easeInOut'
+    });
+}

@@ -1,0 +1,18 @@
+1. Mark und Eve beide Playable sind aber mit PlaceholderSprites.
+
+Eve: 
+-KO
+-Dodge nach Oben oder Unten
+-Projectile Button (U)
+
+Mark:
+-3 Button Combo (H - H - U)
+-Heavy Dash Attack (U halten)
+-Block (K halten)
+-KO
+-Walk animation (3 png)
+
+2.Eine Gegner die du schlagen kannst und dass er dich auch schlagen kann.
+
+3.Mark und Eve beide haben damage und HP und Sterben können.
+
