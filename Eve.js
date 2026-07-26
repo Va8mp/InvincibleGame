@@ -455,7 +455,6 @@ function eveToggleMute(scene) {
 }
 
 // ── Utility ───────────────────────────────────────────────────────────────────
-u
 function eveAnimKey(sprite) {
     if (sprite && sprite.anims && sprite.anims.currentAnim) {
         return sprite.anims.currentAnim.key;

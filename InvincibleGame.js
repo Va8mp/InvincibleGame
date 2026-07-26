@@ -8,7 +8,7 @@
 class InvincibleGame extends Phaser.Scene {
 
     constructor() {
-        super('AtomEve');
+        super('InvincibleGame');
 
         //Scoreboard
         this.totalScore = 0;

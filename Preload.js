@@ -4,12 +4,14 @@
 // =============================================================================
 
 function scenePreload(scene) {
+    //Main Menu assets.
+    scene.load.image('menuSKY', 'Assets/Background/MainMenu/Sky.png');
 
     // Eve — Idle
     scene.load.image('idle1', 'EveSprites/Idle/Idle_00.png');
     scene.load.image('idle2', 'EveSprites/Idle/Idle_01.png');
     scene.load.image('idle3', 'EveSprites/Idle/Idle_02.png');
-
+ 
     // Eve — Walk
     scene.load.image('walk1', 'EveSprites/Move/Walk_00.png');
     scene.load.image('walk2', 'EveSprites/Move/Walk_01.png');
@@ -104,6 +106,7 @@ function scenePreload(scene) {
 
     // Music — update path to match your file
     scene.load.audio('bgMusic', 'Assets/Music/Invincible_Street_01.mp3');
+    scene.load.audio('menuMusic', 'Assets/Music/MainMenu.mp3');
 
     //Sound Effects
     scene.load.audio('sdAbility', 'Assets/Sound/Ability.mp3');

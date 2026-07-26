@@ -6,7 +6,7 @@
     <style>
         @font-face {
             font-family: 'Pixelated';
-            src: url('Assets/Fonts/Pixelated.ttf') format('truetype');
+            src: url('Assets/Fonts/W95F.otf') format('opentype');
         }
         body {
             margin: 0;
@@ -26,23 +26,27 @@
     <script src="HUD.js"></script>
     <script src="Eve.js"></script>
     <script src="EnemyAI.js"></script>
+    <script src="MainMenu.js"></script>
     <script src="InvincibleGame.js"></script>
-</head>
-<body>
-    <script>
-        const config = {
-            type: Phaser.AUTO,
-            width: 1920,
-            height: 1080,
-            pixelArt: true,
-            scene: InvincibleGame,
-            physics: {
+
+    </head>
+    <body>
+        <script>
+            const config = {
+                type: Phaser.AUTO,
+                width: 1920,
+                height: 1080,
+                pixelArt: true,
+                scene: [MainMenu, InvincibleGame],
+                physics: {
                 default: 'arcade',
                 arcade: { gravity: { y: 0 } }
             }
         };
 
         const game = new Phaser.Game(config);
-    </script>
-</body>
+        </script>
+    </body>
+    </html>
+    </body>
 </html>
