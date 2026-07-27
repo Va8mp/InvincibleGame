@@ -136,6 +136,7 @@ function spawnThug2(scene, x, y) {
 }
 
 // ── Spawn a random enemy type from a random corner wave ──────────────────────
+// Inside EnemyAI.js
 function spawnWave(scene) {
     const corners = [
         { x: -200, y: 700 },
@@ -143,31 +144,25 @@ function spawnWave(scene) {
         { x: -200, y: 900 },
         { x: 2100, y: 900 }
     ];
-    const corner = corners[Phaser.Math.Between(0, corners.length - 1)];
 
-    if (Math.random() < 0.5) {
-        spawnThug(scene, corner.x, corner.y);
-    } else {
-        spawnThug2(scene, corner.x, corner.y);
+    // Determine how many enemies spawn per wave based on totalScore
+    let enemyCount = 1; // Base rate
+    if (scene.totalScore >= 1000) {
+        enemyCount = 4; // Tier 3 difficulty at 1000 points
+    } else if (scene.totalScore >= 500) {
+        enemyCount = 3; // Tier 2 difficulty at 500 points
+    } else if (scene.totalScore >= 250) {
+        enemyCount = 2; // Tier 1 difficulty at 250 points
     }
-}
 
-// ── Helper: Check Line of Sight ───────────────────────────────────────────────
-function hasLineOfSight(enemy, character, maxDistance = 700, maxLaneDiff = 40) {
-    const diffY = Math.abs(enemy.y - character.y);
-    const dist  = Phaser.Math.Distance.Between(enemy.x, enemy.y, character.x, character.y);
-
-    // 1. Must be in the same horizontal lane
-    if (diffY > maxLaneDiff) return false;
-
-    // 2. Must be within effective ranged distance
-    if (dist < 150 || dist > maxDistance) return false;
-
-    // 3. Must be facing toward Eve
-    const isEveOnLeft = character.x < enemy.x;
-    const isEnemyFacingLeft = enemy.flipX; // setFlipX(true) means facing left
-
-    return isEveOnLeft === isEnemyFacingLeft;
+    for (let i = 0; i < enemyCount; i++) {
+        const corner = corners[Phaser.Math.Between(0, corners.length - 1)];
+        if (Math.random() < 0.5) {
+            spawnThug(scene, corner.x, corner.y);
+        } else {
+            spawnThug2(scene, corner.x, corner.y);
+        }
+    }
 }
 
 // ── Per-frame AI tick — call from update() ────────────────────────────────────
