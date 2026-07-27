@@ -138,8 +138,8 @@ function createPauseOverlay(scene) {
         'U             Heavy Attack (fires a projectile)\n' +
         '2x-tap A/D    Sprint Dodge\n' +
         'K + W/S       Lane Dodge\n' +
-        'Y             Shield  (unlocks at 10 score)\n' +
-        'I             Healing (unlocks at 20 score)\n' +
+        'Y             Shield  (unlocks at 100 score)\n' +
+        'I             Healing (unlocks at 200 score)\n' +
         '+ / -         Volume   M  Mute';
 
     scene.pauseEveText = scene.add.text(280, 320, eveMoves, {
@@ -158,10 +158,10 @@ function createPauseOverlay(scene) {
         '              connect to continue the combo)\n' +
         'U             Heavy Attack (knockback,\n' +
         '              plays out fully, no canceling)\n' +
-        'Y + A/D held  Dash Attack (charges forward)\n' +
+        'Y + A/D held  Dash Attack (charges forward, unlocks at 100 score)\n' +
         'K (hold)      Block, release to stop\n' +
         'I             Rage Mode — 10s, +5 damage dealt,\n' +
-        '              -3 extra damage taken (unlocks at 20 score)\n' +
+        '              -3 extra damage taken (unlocks at 200 score)\n' +
         '+ / -         Volume   M  Mute';
 
     scene.pauseMarkText = scene.add.text(1280, 320, markMoves, {
