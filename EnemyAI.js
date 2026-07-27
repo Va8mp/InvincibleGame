@@ -298,7 +298,7 @@ function thugAttack(scene, thug, time) {
         if (!thug.active || thug.getData('isDying')) { return; }
         const dist = Phaser.Math.Distance.Between(thug.x, thug.y, scene.character.x, scene.character.y);
         if (dist <= (thug.getData('meleeRange') || 90)) {
-            scene.takeDamage(thug.getData('attackDamage') || 10);
+            scene.takeDamage(thug.getData('attackDamage') || 9);
         }
     });
 

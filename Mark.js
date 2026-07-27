@@ -332,8 +332,8 @@ function markTakeDamage(scene, rawAmount) {
     if (scene.isGameOver) { return; }
 
     // Blocking soaks up most of the hit
-    let dr = 7;
-    if (scene.isBlocking) { dr += 7; }
+    let dr = 4; // Base damage reduction
+    if (scene.isBlocking) { dr += 3; } 
     if (scene.isRaging)   { dr -= 3; } // Rage — takes more damage per hit
     dr = Math.max(0, dr);
 
