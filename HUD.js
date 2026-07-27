@@ -210,7 +210,7 @@ function updateHUD(scene) {
         scene.currentHP = 100;
     }
 
-    if (scene.totalScore == 10) {
+    if (scene.totalScore == 100) {
 
     scene.hasShield = true;
 
@@ -229,7 +229,7 @@ function updateHUD(scene) {
         }
     }
 
-    if (scene.totalScore == 20) {
+    if (scene.totalScore == 200) {
 
     scene.hasHealing = true;
 
