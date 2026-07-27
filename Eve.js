@@ -381,7 +381,7 @@ function eveFireProjectile(scene) {
     orb.setDepth(10);
     orb.setVelocityX(facingLeft ? -700 : 700);
     orb.setFlipX(facingLeft);
-    orb.damage = Phaser.Math.Between(20, 30); // Random damage between 20 and 30
+    orb.damage = Phaser.Math.Between(20, 8); // Random damage between 20 and 30
     orb.play('projectileAnim', true);
 
     //Reduces Mana by -20
