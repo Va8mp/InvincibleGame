@@ -21,21 +21,9 @@ function createHUD(scene) {
     scene.hudPanel = scene.add.rectangle(717, 115.5, 450, 60, 0x000000, 0.6)
         .setOrigin(0, 0).setScrollFactor(0).setDepth(20);
     // ──────────────────────────────────────────────────────────────────────────────────
-    //Logo of Eve nexts to her HP if she is selected.
-    scene.markHP = scene.add.image(720, 147, 'markHPLogo')
-        .setOrigin(0, 0.5)
-        .setScrollFactor(0)
-        .setDepth(24)
-        .setScale(0.8);
-    
-    // MARK COMING SOON
-    scene.markText = scene.add.text(790, 130, 'COMING SOON...', {
-        fontFamily: 'Pixelated', fontSize: '32px', color: '#ffffff'
-    }).setScrollFactor(0).setDepth(23);
-    // ──────────────────────────────────────────────────────────────────────────────────
-
-    //Logo of Eve nexts to her HP if she is selected.
-    scene.eveHP = scene.add.image(255, 145, 'eveHPLogo')
+    // Logo next to the HP bar — shows whichever character is currently selected.
+    const isMark = scene.selectedCharacter === 'mark';
+    scene.eveHP = scene.add.image(255, 145, isMark ? 'markHPLogo' : 'eveHPLogo')
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
         .setDepth(24)
@@ -51,7 +39,7 @@ function createHUD(scene) {
         .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
 
     // HP text shifted right inside the HP
-    scene.hudText = scene.add.text(325, 125, 'EVE  HP: 100 / 100', {
+    scene.hudText = scene.add.text(325, 125, (isMark ? 'MARK' : 'EVE') + '  HP: 100 / 100', {
         fontFamily: 'Pixelated', fontSize: '18px', color: '#ffffff'
     }).setScrollFactor(0).setDepth(23);
     // ──────────────────────────────────────────────────────────────────────────────────
@@ -97,10 +85,16 @@ function createHUD(scene) {
         align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
 
-    scene.gameOverSub = scene.add.text(960, 590, 'Atom Eve has fallen.', {
+    //Game Over Subtext — changes depending on which character is selected.
+    scene.gameOverSubEve = scene.add.text(960, 590, 'Atom Eve has fallen.', {
         fontFamily: 'Pixelated', fontSize: '36px', color: '#ffaaaa', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
 
+    scene.gameOverSubMark = scene.add.text(960, 590, 'Invincible has fallen.', {
+        fontFamily: 'Pixelated', fontSize: '36px', color: '#fbff00', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    // Total Score text on the Game Over screen
     scene.totalScoreEnd = scene.add.text(960, 630, 'Total Score: ' + scene.totalScore, {
         fontFamily: 'Pixelated', fontSize: '36px', color: '#ffaaaa', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
@@ -108,8 +102,86 @@ function createHUD(scene) {
     scene.gameOverHint = scene.add.text(960, 660, 'Press  R  to restart', {
         fontFamily: 'Pixelated', fontSize: '28px', color: '#ffffff', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    // ── Pause Overlay (hidden until P is pressed) ─────────────────────────────
+    createPauseOverlay(scene);
 }
     // ──────────────────────────────────────────────────────────────────────────────────
+
+function createPauseOverlay(scene) {
+    scene.pauseOverlay = scene.add.rectangle(960, 540, 1920, 1080, 0x000000, 0.82)
+        .setScrollFactor(0).setDepth(60).setVisible(false);
+
+    scene.pauseTitle = scene.add.text(960, 150, 'PAUSED', {
+        fontFamily: 'Pixelated',
+        fontSize: '110px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 10,
+        align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(61).setVisible(false);
+
+    scene.pauseHint = scene.add.text(960, 990, 'Press  P  to resume', {
+        fontFamily: 'Pixelated', fontSize: '30px', color: '#ffdd00', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(61).setVisible(false);
+
+    const isMark = scene.selectedCharacter === 'mark';
+
+    scene.pauseEveTitle = scene.add.text(280, 260, 'ATOM EVE', {
+        fontFamily: 'Pixelated', fontSize: '38px',
+        color: isMark ? '#ff49ff' : '#ff49ff'
+    }).setScrollFactor(0).setDepth(61).setVisible(false);
+
+    const eveMoves =
+        'WASD          Move\n' +
+        'H             Light Combo (3 hits)\n' +
+        'U             Heavy Attack (fires a projectile)\n' +
+        '2x-tap A/D    Sprint Dodge\n' +
+        'K + W/S       Lane Dodge\n' +
+        'Y             Shield  (unlocks at 10 score)\n' +
+        'I             Healing (unlocks at 20 score)\n' +
+        '+ / -         Volume   M  Mute';
+
+    scene.pauseEveText = scene.add.text(280, 320, eveMoves, {
+        fontFamily: 'Pixelated', fontSize: '22px', color: '#ffffff',
+        align: 'left', lineSpacing: 14
+    }).setScrollFactor(0).setDepth(61).setVisible(false);
+
+    scene.pauseMarkTitle = scene.add.text(1280, 260, 'INVINCIBLE', {
+        fontFamily: 'Pixelated', fontSize: '38px',
+        color: isMark ? '#ffd900' : '#ffd900'
+    }).setScrollFactor(0).setDepth(61).setVisible(false);
+
+    const markMoves =
+        'WASD          Move\n' +
+        'H             Light Combo (3 hits — must\n' +
+        '              connect to continue the combo)\n' +
+        'U             Heavy Attack (knockback,\n' +
+        '              plays out fully, no canceling)\n' +
+        'Y + A/D held  Dash Attack (charges forward)\n' +
+        'K (hold)      Block, release to stop\n' +
+        'I             Rage Mode — 10s, +5 damage dealt,\n' +
+        '              -3 extra damage taken (unlocks at 20 score)\n' +
+        '+ / -         Volume   M  Mute';
+
+    scene.pauseMarkText = scene.add.text(1280, 320, markMoves, {
+        fontFamily: 'Pixelated', fontSize: '22px', color: '#ffffff',
+        align: 'left', lineSpacing: 14
+    }).setScrollFactor(0).setDepth(61).setVisible(false);
+}
+
+// Show/hide the pause overlay and its two move lists together
+function showPauseOverlay(scene) {
+    [scene.pauseOverlay, scene.pauseTitle, scene.pauseHint,
+     scene.pauseEveTitle, scene.pauseEveText,
+     scene.pauseMarkTitle, scene.pauseMarkText].forEach((el) => el.setVisible(true));
+}
+
+function hidePauseOverlay(scene) {
+    [scene.pauseOverlay, scene.pauseTitle, scene.pauseHint,
+     scene.pauseEveTitle, scene.pauseEveText,
+     scene.pauseMarkTitle, scene.pauseMarkText].forEach((el) => el.setVisible(false));
+}
 
 // Called every frame from update()
 function updateHUD(scene) {
@@ -127,7 +199,8 @@ function updateHUD(scene) {
     else if (pct > 0.3) { scene.hudBar.setFillStyle(0xff9900); }
     else                { scene.hudBar.setFillStyle(0xff2200); }
 
-    scene.hudText.setText('EVE  HP: ' + scene.currentHP + ' / ' + scene.maxHP); //Updates Eve's current HP.
+    const nameLabel = scene.selectedCharacter === 'mark' ? 'MARK' : 'EVE';
+    scene.hudText.setText(nameLabel + '  HP: ' + scene.currentHP + ' / ' + scene.maxHP); //Updates current HP.
 
     scene.energyText.setText('Energy: ' + scene.currentEnergy + ' / ' + scene.maxEnergy); //Updates Eve's current Energy.
 
@@ -137,26 +210,42 @@ function updateHUD(scene) {
         scene.currentHP = 100;
     }
 
-    if (scene.totalScore == 100) {
+    if (scene.totalScore == 10) {
 
-        scene.hasShield = true;
+    scene.hasShield = true;
 
-        scene.shieldIcon = scene.add.image(620, 140, 'shieldLogo')
+        if (scene.selectedCharacter === 'mark') {
+            scene.shieldIcon = scene.add.image(620, 140, 'dashLogo')
+                .setOrigin(0, 0.5)
+                .setScrollFactor(0)
+                .setDepth(24)
+                .setScale(0.5);
+        } else {
+            scene.shieldIcon = scene.add.image(620, 140, 'shieldLogo')
             .setOrigin(0, 0.5)
             .setScrollFactor(0)
             .setDepth(24)
             .setScale(0.5);
+        }
     }
 
-    if (scene.totalScore == 200) {
+    if (scene.totalScore == 20) {
 
-        scene.hasHealing = true;
+    scene.hasHealing = true;
 
-        scene.healingIcon = scene.add.image(660, 140, 'healingLogo')
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0)
-            .setDepth(24)
-            .setScale(0.5);
+        if (scene.selectedCharacter === 'mark') {
+            scene.shieldIcon = scene.add.image(660, 140, 'rageLogo')
+                .setOrigin(0, 0.5)
+                .setScrollFactor(0)
+                .setDepth(24)
+                .setScale(0.5);
+        } else {
+            scene.shieldIcon = scene.add.image(660, 140, 'healingLogo')
+                .setOrigin(0, 0.5)
+                .setScrollFactor(0)
+                .setDepth(24)
+                .setScale(0.5);
+        }
     }
 }
 
@@ -172,8 +261,12 @@ function showGameOver(scene) {
     scene.gameOverOverlay.setVisible(true);
     scene.gameOverTitle.setVisible(true);
     scene.totalScoreEnd.setVisible(true);
-    scene.gameOverSub.setVisible(true);
-    scene.gameOverHint.setVisible(true);
+
+    if (scene.selectedCharacter === 'mark') {
+        scene.gameOverSubMark.setVisible(true);
+    } else {
+        scene.gameOverSubEve.setVisible(true);
+    }
 
     scene.tweens.add({
         targets: scene.gameOverTitle,

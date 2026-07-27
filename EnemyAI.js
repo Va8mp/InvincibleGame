@@ -26,7 +26,7 @@ function createEnemyAnims(scene) {
     scene.anims.create({
         key: 'thugStun',
         frames: [{ key: 'thug_stun1' }, { key: 'thug_stun2' }, { key: 'thug_stun1' }],
-        frameRate: 4,
+        frameRate: 2,
         repeat: 0
     });
 
@@ -55,7 +55,7 @@ function createEnemyAnims(scene) {
     scene.anims.create({
         key: 'thug02Stun',
         frames: [{ key: 'thug02_stun1' }, { key: 'thug02_stun2' }, { key: 'thug02_stun1' }],
-        frameRate: 4,
+        frameRate: 2,
         repeat: 0
     });
 
@@ -118,7 +118,7 @@ function spawnThug2(scene, x, y) {
     thug.setFlipX(x > scene.character.x);
 
     thug.setData('type',            'thug2');
-    thug.setData('hp',              80);
+    thug.setData('hp',              40);
     thug.setData('damageReduction',  0);
     thug.setData('armor',           0);
     thug.setData('speed',           90);
@@ -126,7 +126,7 @@ function spawnThug2(scene, x, y) {
     thug.setData('isStunned',       false);
     thug.setData('isAttacking',     false);
     thug.setData('isDying',         false);
-    thug.setData('attackCooldown',  2000);
+    thug.setData('attackCooldown',  2200);
     thug.setData('lastAttackTime',  0);
     thug.setData('attackDamage',    14);
     thug.setData('idleAnim',        'thug02IdleAnim');
@@ -227,7 +227,7 @@ function updateEnemies(scene, time) {
 
         const distToEve = Phaser.Math.Distance.Between(proj.x, proj.y, scene.character.x, scene.character.y);
         if (distToEve <= 45) {
-            eveTakeDamage(scene, proj.getData('damage') || 12);
+            scene.takeDamage(proj.getData('damage') || 12);
             proj.destroy();
         } else if (proj.x < -300 || proj.x > 2400) {
             proj.destroy();
@@ -285,7 +285,7 @@ function thugAttack(scene, thug, time) {
         if (!thug.active || thug.getData('isDying')) { return; }
         const dist = Phaser.Math.Distance.Between(thug.x, thug.y, scene.character.x, scene.character.y);
         if (dist <= (thug.getData('meleeRange') || 90)) {
-            eveTakeDamage(scene, thug.getData('attackDamage') || 10);
+            scene.takeDamage(thug.getData('attackDamage') || 10);
         }
     });
 
@@ -331,6 +331,9 @@ function enemyTakeHit(scene, enemy, rawDamage) {
             scene.time.delayedCall(300, () => {
                 if (enemy.active && !enemy.getData('isDying')) {
                     enemy.setData('isStunned', false);
+                    // Grace period: restart its attack cooldown so it can't swing
+                    // the instant it recovers — it still takes damage normally though.
+                    enemy.setData('lastAttackTime', scene.time.now);
                     enemy.play(idleAnim, true);
                 }
             });
@@ -358,6 +361,14 @@ function enemyDie(scene, enemy) {
     scene.totalScore += 10;
     scene.currentEnergy += 5; //Killing an enemy grants +5 Energy and +10 Score to Eve.
 
+    // ── Item drops — 20% chance each, independent rolls ───────────────────────
+    if (Math.random() < 0.2) {
+        spawnItemDrop(scene, enemy.x - 20, enemy.y, 'Steak', 'hp');
+    }
+    if (Math.random() < 0.2) {
+        spawnItemDrop(scene, enemy.x + 20, enemy.y, 'Milkshake', 'energy');
+    }
+
     scene.tweens.add({
         targets: enemy,
         angle: launchDirection * 360,
@@ -377,4 +388,54 @@ function cleanProjectiles(scene) {
     scene.projectiles.getChildren().forEach((orb) => {
         if (orb.active && (orb.x < -400 || orb.x > 2500)) { orb.destroy(); }
     });
+}
+
+// =============================================================================
+//  Item drops — Steak (+10 HP) and Milkshake (+10 Energy)
+// =============================================================================
+
+// Creates the pickup group and the overlap that collects items, the first
+// time it's needed (character isn't guaranteed to exist before this point).
+function ensureItemPickupsGroup(scene) {
+    if (scene.itemPickups) { return; }
+
+    scene.itemPickups = scene.physics.add.group({ allowGravity: false });
+
+    scene.physics.add.overlap(scene.character, scene.itemPickups, (character, item) => {
+        collectItem(scene, item);
+    });
+}
+
+// Drops a pickup at (x, y) that sits in place — bobbing gently — until picked up.
+function spawnItemDrop(scene, x, y, textureKey, effect) {
+    ensureItemPickupsGroup(scene);
+
+    const item = scene.itemPickups.create(x, y, textureKey);
+    item.setScale(1.2);
+    item.setDepth(9);
+    item.setData('effect', effect); // 'hp' or 'energy'
+
+    scene.tweens.add({
+        targets: item,
+        y: y - 12,
+        yoyo: true,
+        repeat: -1,
+        duration: 600,
+        ease: 'Sine.easeInOut'
+    });
+}
+
+// Called on overlap with the player character — grants the effect and removes the item.
+function collectItem(scene, item) {
+    if (!item.active) { return; }
+
+    const effect = item.getData('effect');
+    if (effect === 'hp') {
+        scene.currentHP = Math.min(scene.maxHP, scene.currentHP + 10);
+    } else if (effect === 'energy') {
+        scene.currentEnergy = Math.min(scene.maxEnergy, scene.currentEnergy + 10);
+    }
+
+    if (scene.sdAbility) scene.sdAbility.play();
+    item.destroy();
 }

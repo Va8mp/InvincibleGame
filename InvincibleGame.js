@@ -10,8 +10,9 @@ class InvincibleGame extends Phaser.Scene {
     constructor() {
         super('InvincibleGame');
 
-        //Scoreboard
+        //Scoreboard and the current Character
         this.totalScore = 0;
+        this.currentCharacter = "";
 
         // Combo
         this.comboStage   = 0;
@@ -34,6 +35,11 @@ class InvincibleGame extends Phaser.Scene {
         this.isShielding     = false;
         this.isDodging        = false;
         this.isGameOver       = false;
+        this.isPaused         = false;
+        this.isBlocking       = false;   // Mark — holding K
+        this.isDashAttacking  = false;   // Mark — dash attack in progress
+        this.isRaging         = false;   // Mark — Rage mode active
+        this.markComboLocked  = false;   // Mark — 500ms gap enforced between combo hits
 
         //Skills Unlocked
         this.hasShield = false;
@@ -56,6 +62,10 @@ class InvincibleGame extends Phaser.Scene {
 
     // -------------------------------------------------------------------------
     create() {
+        // Which character was picked on the CharacterSelect screen ('eve' | 'mark').
+        // Falls back to Eve if the scene was ever started without going through select.
+        this.selectedCharacter = this.registry.get('selectedCharacter') || 'eve';
+
         this.physics.world.setBounds(-300, 330, 2500, 730); // ← world bounds for Eve and enemies
 
         // ── Background (do not change) ────────────────────────────────────────
@@ -85,11 +95,19 @@ class InvincibleGame extends Phaser.Scene {
         this.sdSound = this.sound.add('sdSound', { volume: 0.3 });
 
         // ── Animations ────────────────────────────────────────────────────────
-        createEveAnims(this);    // Eve.js
+        if (this.selectedCharacter === 'mark') {
+            createMarkAnims(this); // Mark.js
+        } else {
+            createEveAnims(this);  // Eve.js
+        }
         createEnemyAnims(this);  // EnemyAI.js
 
-        // ── Eve ───────────────────────────────────────────────────────────────
-        createEve(this);         // Eve.js
+        // ── Player character ─────────────────────────────────────────────────
+        if (this.selectedCharacter === 'mark') {
+            createMark(this);     // Mark.js
+        } else {
+            createEve(this);      // Eve.js
+        }
 
         // ── Keyboard bindings ─────────────────────────────────────────────────
         this.keys = this.input.keyboard.addKeys({
@@ -102,6 +120,7 @@ class InvincibleGame extends Phaser.Scene {
             shield:   Phaser.Input.Keyboard.KeyCodes.Y,
             healing:   Phaser.Input.Keyboard.KeyCodes.I,
             dodge:   Phaser.Input.Keyboard.KeyCodes.K,
+            pause:   Phaser.Input.Keyboard.KeyCodes.P,
             volUp:   Phaser.Input.Keyboard.KeyCodes.PLUS,
             volDown: Phaser.Input.Keyboard.KeyCodes.MINUS,
             mute:    Phaser.Input.Keyboard.KeyCodes.M
@@ -140,7 +159,12 @@ class InvincibleGame extends Phaser.Scene {
         // Cloud scroll (do not change)
         this.cloud.tilePositionX += 0.5;
 
-        if (this.isGameOver) { return; }
+        // P → toggle pause (not available once the game is over)
+        if (!this.isGameOver && Phaser.Input.Keyboard.JustDown(this.keys.pause)) {
+            this.togglePause();
+        }
+
+        if (this.isGameOver || this.isPaused) { return; }
 
         // Volume controls
         if (Phaser.Input.Keyboard.JustDown(this.keys.volUp)) {
@@ -159,6 +183,48 @@ class InvincibleGame extends Phaser.Scene {
 
         if (this.isRecovering) { return; }
 
-        updateEve(this, time);         // Eve.js
+        if (this.selectedCharacter === 'mark') {
+            updateMark(this, time);    // Mark.js
+        } else {
+            updateEve(this, time);     // Eve.js
+        }
     }
+
+    // -------------------------------------------------------------------------
+    togglePause() {
+        this.isPaused = !this.isPaused;
+
+        if (this.isPaused) {
+            this.physics.pause();
+            this.time.paused = true;
+            this.tweens.pauseAll();
+            if (this.bgMusic) { this.bgMusic.pause(); }
+            showPauseOverlay(this);   // HUD.js
+        } else {
+            this.physics.resume();
+            this.time.paused = false;
+            this.tweens.resumeAll();
+            if (this.bgMusic) { this.bgMusic.resume(); }
+            hidePauseOverlay(this);   // HUD.js
+        }
+    }
+}
+
+// ── Shared game-over handling — called by eveTakeDamage() and markTakeDamage() ──
+function triggerGameOver(scene) {
+    scene.isGameOver = true;
+    scene.character.setVelocity(0);
+    scene.character.setTint(0xff0000);
+    scene.enemyGroup.getChildren().forEach((e) => { if (e.active) { e.setVelocity(0); } });
+    scene.sdFail.play();
+
+    // Fade music out
+    scene.tweens.add({
+        targets: scene.bgMusic,
+        volume: 0,
+        duration: 2000,
+        onComplete: () => { scene.bgMusic.stop(); }
+    });
+
+    showGameOver(scene); // defined in HUD.js
 }

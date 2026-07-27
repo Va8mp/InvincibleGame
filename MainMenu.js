@@ -80,9 +80,12 @@ class MainMenu extends Phaser.Scene {
             startBtn.setStyle({ fill: '#ffffff' });
         });
 
-        // CLICK EVENT: Launches the game scene when clicked!
+        // CLICK EVENT: Sends the player to pick a character first!
         startBtn.on('pointerdown', () => {
-            this.scene.start('InvincibleGame');
+            if (this.bgm) {
+                this.bgm.stop();
+            }
+            this.scene.start('CharacterSelect');
         });
 
         //OPTIONS BUTTON
@@ -104,6 +107,9 @@ class MainMenu extends Phaser.Scene {
 
         // CLICK EVENT: Launches the game scene when clicked!
         optionsBtn.on('pointerdown', () => {
+            if (this.bgm) {
+                this.bgm.stop();
+            }
             this.scene.start('InvincibleGame');
         });
 

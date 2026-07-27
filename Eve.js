@@ -104,6 +104,10 @@ function createEve(scene) {
     scene.character.play('idleAnim');
     scene.character.setCollideWorldBounds(true);
 
+    // Generic damage entry point — EnemyAI.js calls scene.takeDamage(dmg)
+    // so it doesn't need to know which character is active.
+    scene.takeDamage = (dmg) => eveTakeDamage(scene, dmg);
+
     scene.character.on('animationcomplete', (animation) => {
         if (animation.key === 'heavyAnim') {
             scene.isHeavyAttacking = false;
@@ -416,25 +420,7 @@ function eveTakeDamage(scene, rawAmount) {
         if (scene.character.active) { scene.character.clearTint(); }
     });
 
-    if (scene.currentHP <= 0) { eveTriggerGameOver(scene); }
-}
-
-function eveTriggerGameOver(scene) {
-    scene.isGameOver = true;
-    scene.character.setVelocity(0);
-    scene.character.setTint(0xff0000);
-    scene.enemyGroup.getChildren().forEach((e) => { if (e.active) { e.setVelocity(0); } });
-    scene.sdFail.play();
-
-    // Fade music out
-    scene.tweens.add({
-        targets: scene.bgMusic,
-        volume: 0,
-        duration: 2000,
-        onComplete: () => { scene.bgMusic.stop(); }
-    });
-
-    showGameOver(scene); // defined in HUD.js
+    if (scene.currentHP <= 0) { triggerGameOver(scene); } // shared — see InvincibleGame.js
 }
 
 // ── Volume controls ───────────────────────────────────────────────────────────
