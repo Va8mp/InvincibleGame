@@ -165,6 +165,24 @@ function spawnWave(scene) {
     }
 }
 
+// ── Check if an enemy has line of sight to the player character ───────────────
+function hasLineOfSight(enemy, character, maxDistance = 700, maxLaneDiff = 40) {
+    const diffY = Math.abs(enemy.y - character.y);
+    const dist  = Phaser.Math.Distance.Between(enemy.x, enemy.y, character.x, character.y);
+
+    // 1. Must be in the same horizontal lane (Y axis)
+    if (diffY > maxLaneDiff) return false;
+
+    // 2. Must be within effective ranged distance
+    if (dist < 150 || dist > maxDistance) return false;
+
+    // 3. Must be facing toward the player
+    const isPlayerOnLeft = character.x < enemy.x;
+    const isEnemyFacingLeft = enemy.flipX; // setFlipX(true) means facing left
+
+    return isPlayerOnLeft === isEnemyFacingLeft;
+}
+
 // ── Per-frame AI tick — call from update() ────────────────────────────────────
 function updateEnemies(scene, time) {
     if (!scene.enemyProjectiles) {
