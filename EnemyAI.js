@@ -240,7 +240,8 @@ function updateEnemies(scene, time) {
 
         const distToEve = Phaser.Math.Distance.Between(proj.x, proj.y, scene.character.x, scene.character.y);
         if (distToEve <= 45) {
-            scene.takeDamage(proj.getData('damage') || 12);
+            showImpact(scene, scene.character.x, scene.character.y); // impact flash on Eve
+            scene.takeDamage(proj.getData('damage') || 15);
             proj.destroy();
         } else if (proj.x < -300 || proj.x > 2400) {
             proj.destroy();
@@ -270,7 +271,7 @@ function thug2ShootProjectile(scene, thug, time) {
         
         proj.setScale(2.5);
         proj.setFlipX(isFacingLeft);
-        proj.setData('damage', 7);
+        proj.setData('damage', 15);
         proj.play('thug02Projectile', true);
 
         // Velocity travels directly along the X axis
@@ -298,7 +299,7 @@ function thugAttack(scene, thug, time) {
         if (!thug.active || thug.getData('isDying')) { return; }
         const dist = Phaser.Math.Distance.Between(thug.x, thug.y, scene.character.x, scene.character.y);
         if (dist <= (thug.getData('meleeRange') || 90)) {
-            scene.takeDamage(thug.getData('attackDamage') || 9);
+            scene.takeDamage(thug.getData('attackDamage') || 11);
         }
     });
 
@@ -313,6 +314,17 @@ function thugAttack(scene, thug, time) {
 // ── Apply damage to an enemy ──────────────────────────────────────────────────
 function enemyTakeHit(scene, enemy, rawDamage) {
     if (!enemy.active || enemy.getData('isStunned') || enemy.getData('isDying')) { return; }
+
+    // Thug_02 vertical hitbox guard — hits that land more than 55px above
+    // his centre are treated as going over his head and deal no damage.
+    if (enemy.getData('type') === 'thug2') {
+        const attackerY = scene.character ? scene.character.y : enemy.y;
+        const verticalDiff = enemy.y - attackerY; // positive = attacker is above enemy
+        if (verticalDiff > 55) {
+            // Hit passed over Thug_02's head — ignore it
+            return;
+        }
+    }
 
     const dmg   = Math.max(0, rawDamage - (enemy.getData('damageReduction') || 0));
     const newHP = (enemy.getData('hp') || 0) - dmg;
@@ -451,4 +463,22 @@ function collectItem(scene, item) {
 
     if (scene.sdAbility) scene.sdAbility.play();
     item.destroy();
+}
+
+// ── Impact flash — shown on the enemy whenever a projectile connects ──────────
+// Spawns Impact_00.png centred on the target for 500ms then destroys itself.
+function showImpact(scene, x, y) {
+    const flash = scene.add.image(x, y, 'Enemyimpact1');
+    flash.setScale(3);
+    flash.setDepth(15);   // always in front of enemies
+
+    // Play the impact sound effect if available
+    scene.sdRocket.play();
+
+    // Slight random rotation each hit so repeated hits look varied
+    flash.setAngle(Phaser.Math.Between(0, 359));
+
+    scene.time.delayedCall(500, () => {
+        if (flash && flash.active) { flash.destroy(); }
+    });
 }

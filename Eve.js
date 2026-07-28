@@ -27,7 +27,7 @@ function createEveAnims(scene) {
     scene.anims.create({
         key: 'hitAnim1',
         frames: [{ key: 'hit1' }],
-        frameRate: 4,
+        frameRate: 8,
         repeat: 0
     });
 
@@ -35,7 +35,7 @@ function createEveAnims(scene) {
     scene.anims.create({
         key: 'hitAnim2',
         frames: [{ key: 'hit3' }, { key: 'hit2' }, { key: 'hit4' }, { key: 'hit3' }],
-        frameRate: 5,
+        frameRate: 9,
         repeat: 0
     });
 
@@ -108,12 +108,24 @@ function createEve(scene) {
     // so it doesn't need to know which character is active.
     scene.takeDamage = (dmg) => eveTakeDamage(scene, dmg);
 
+    // U hold-charge tracking (set when U goes down, cleared on release/fire)
+    scene.heavyHoldStartTime = null;
+
     scene.character.on('animationcomplete', (animation) => {
         if (animation.key === 'heavyAnim') {
             scene.isHeavyAttacking = false;
-            eveFireProjectile(scene);
             scene.isRecovering = true;
             scene.time.delayedCall(83, () => { scene.isRecovering = false; });
+
+            if (scene.pendingDualHeavy) {
+                // Hold-charge release — fire one orb each way
+                scene.pendingDualHeavy = false;
+                eveFireProjectileDir(scene, true);   // left
+                eveFireProjectileDir(scene, false);  // right
+            } else {
+                // Normal tap — single orb toward facing direction
+                eveFireProjectile(scene);
+            }
         }
         if (animation.key === 'shieldingAnim') {
             scene.isShielding = false; // Release input lock after cast frame ends
@@ -223,12 +235,39 @@ function updateEve(scene, time) {
     }
 
     // U → heavy attack
+    // • Tap  (hold < 600ms) → single orb toward facing direction  (costs 2 energy)
+    // • Hold (hold ≥ 600ms) → dual orbs left + right              (costs 7 energy)
     if (scene.currentEnergy >= 2) {
-        if (Phaser.Input.Keyboard.JustDown(scene.keys.heavy)) {
-            scene.isHeavyAttacking = true;
-            scene.character.play('heavyAnim', true);
-            scene.character.setVelocity(0);
-            scene.sdRocket.play();
+        const heavyKey = scene.keys.heavy;
+
+        // Record the moment U is first pressed
+        if (Phaser.Input.Keyboard.JustDown(heavyKey)) {
+            scene.heavyHoldStartTime = scene.time.now;
+        }
+
+        // When U is released, decide which attack to fire
+        if (Phaser.Input.Keyboard.JustUp(heavyKey) && scene.heavyHoldStartTime !== null) {
+            const held = scene.time.now - scene.heavyHoldStartTime;
+            scene.heavyHoldStartTime = null;
+
+            if (held >= 600 && scene.currentEnergy >= 7) {
+                // ── HOLD: dual-orb burst (left + right) ──────────────────────
+                scene.isHeavyAttacking = true;
+                scene.character.play('heavyAnim', true);
+                scene.character.setVelocity(0);
+                scene.currentEnergy = Math.max(0, scene.currentEnergy - 7);
+                if (scene.sdRocket) scene.sdRocket.play();
+
+                // Fire both orbs after the wind-up plays (handled in animationcomplete
+                // via the isDualHeavy flag so we don't need a new anim callback)
+                scene.pendingDualHeavy = true;
+            } else {
+                // ── TAP: single orb toward facing direction ───────────────────
+                scene.isHeavyAttacking = true;
+                scene.character.play('heavyAnim', true);
+                scene.character.setVelocity(0);
+                if (scene.sdRocket) scene.sdRocket.play();
+            }
             return;
         }
     }
@@ -306,9 +345,9 @@ function eveTriggerShield(scene) {
     scene.isShielding = true;
     scene.isShieldActive = true;
 
-    // Boost damage reduction (+7 so 3 becomes 10)
+    // Boost damage reduction (+9 so 3 becomes 12)
     const baseDR = scene.damageReduction;
-    scene.damageReduction = baseDR + 5;
+    scene.damageReduction = baseDR + 9;
 
     //Reduces Mana by -20
     scene.currentEnergy = scene.currentEnergy - 20;
@@ -329,15 +368,19 @@ function eveTriggerShield(scene) {
         scene.isShielding = false;
     });
 
-    // 10-second shield duration
+    // 10-second shield duration — when it expires, burst-fire left AND right
     scene.time.delayedCall(10000, () => {
         if (scene.activeShield && scene.activeShield.active) {
             scene.activeShield.destroy();
         }
         scene.isShieldActive = false;
 
-        // Reset damage reduction back to base amount after 10s
+        // Reset damage reduction back to base amount
         scene.damageReduction = baseDR;
+
+        // Shield-burst: fire one orb in each direction on expiry
+        eveFireProjectileDir(scene, true);   // left
+        eveFireProjectileDir(scene, false);  // right
     });
 }
 
@@ -381,7 +424,7 @@ function eveFireProjectile(scene) {
     orb.setDepth(10);
     orb.setVelocityX(facingLeft ? -700 : 700);
     orb.setFlipX(facingLeft);
-    orb.damage = Phaser.Math.Between(20, 8); // Random damage between 20 and 30
+    orb.damage = Phaser.Math.Between(20, 30); // Random damage between 20 and 30
     orb.play('projectileAnim', true);
 
     //Reduces Mana by -20
@@ -389,6 +432,30 @@ function eveFireProjectile(scene) {
 
     scene.physics.add.overlap(orb, scene.enemyGroup, (proj, enemy) => {
         if (!proj.active || !enemy.active) { return; }
+        showImpact(scene, enemy.x, enemy.y);   // impact flash on hit
+        enemyTakeHit(scene, enemy, proj.damage);
+        proj.destroy();
+    });
+}
+
+// Fire a single orb in an explicit direction regardless of which way Eve faces.
+// facingLeft = true → fires left, false → fires right.
+// Used by shield-burst expiry and hold-U dual fire.
+function eveFireProjectileDir(scene, facingLeft) {
+    const orb = scene.projectiles.create(
+        scene.character.x + (facingLeft ? -65 : 65),
+        scene.character.y - 50
+    );
+    orb.setScale(5);
+    orb.setDepth(10);
+    orb.setVelocityX(facingLeft ? -700 : 700);
+    orb.setFlipX(facingLeft);
+    orb.damage = Phaser.Math.Between(24, 34); // Random damage between 24 and 34
+    orb.play('projectileAnim', true);
+
+    scene.physics.add.overlap(orb, scene.enemyGroup, (proj, enemy) => {
+        if (!proj.active || !enemy.active) { return; }
+        showImpact(scene, enemy.x, enemy.y);   // impact flash on hit
         enemyTakeHit(scene, enemy, proj.damage);
         proj.destroy();
     });

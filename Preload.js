@@ -93,6 +93,8 @@ function scenePreload(scene) {
     scene.load.image('pro2', 'EveSprites/Effects/Projectile_02.png');
     scene.load.image('pro3', 'EveSprites/Effects/Projectile_03.png');
 
+    scene.load.image('impact1', 'EveSprites/Effects/Impact_00.png');
+
     // Eve — Shield
     scene.load.image('shield1', 'EveSprites/Effects/Shield_01.png');
     scene.load.image('shield2', 'EveSprites/Effects/Shield_02.png');
@@ -156,6 +158,9 @@ function scenePreload(scene) {
     scene.load.image('thug02_blast1', 'Enemies/Thug_02/ProjBlast_00.png');
     scene.load.image('thug02_blast2', 'Enemies/Thug_02/ProjBlast_01.png');
     scene.load.image('thug02_blast3', 'Enemies/Thug_02/ProjBlast_02.png');
+
+    // ── Thug_02 — Impact ─────────────────────────────────────────────────────────
+    scene.load.image('Enemyimpact1', 'Enemies/Thug_02/Impact_00.png');
 
     // Music — update path to match your file
     scene.load.audio('bgMusic', 'Assets/Music/Invincible_Street_01.mp3');
