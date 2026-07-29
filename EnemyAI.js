@@ -92,9 +92,9 @@ function spawnThug(scene, x, y) {
     thug.setFlipX(x > scene.character.x);
 
     thug.setData('type',            'thug1');
-    thug.setData('hp',              60);
+    thug.setData('hp',              70);
     thug.setData('damageReduction',  3);
-    thug.setData('armor',           13);
+    thug.setData('armor',           15);
     thug.setData('speed',           80);
     thug.setData('meleeRange',      90);
     thug.setData('isStunned',       false);
@@ -118,7 +118,7 @@ function spawnThug2(scene, x, y) {
     thug.setFlipX(x > scene.character.x);
 
     thug.setData('type',            'thug2');
-    thug.setData('hp',              40);
+    thug.setData('hp',              50);
     thug.setData('damageReduction',  0);
     thug.setData('armor',           0);
     thug.setData('speed',           90);
