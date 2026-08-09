@@ -292,11 +292,11 @@ function markTriggerHeavy(scene) {
 function markCheckLightAttackHit(scene, stage) {
     let reach, minDmg, maxDmg;
     if (stage === 'dash') {
-        reach = 150; minDmg = 23; maxDmg = 32;
+        reach = 160; minDmg = 28; maxDmg = 34;
     } else if (stage === 'heavy') {
-        reach = 140; minDmg = 40; maxDmg = 55;
+        reach = 150; minDmg = 40; maxDmg = 60;
     } else {
-        reach = 140; minDmg = 17; maxDmg = 26;
+        reach = 140; minDmg = 20; maxDmg = 30;
     }
 
     const faceDir = scene.character.flipX ? -1 : 1;
@@ -333,7 +333,7 @@ function markTakeDamage(scene, rawAmount) {
 
     // Blocking soaks up most of the hit
     let dr = 4; // Base damage reduction
-    if (scene.isBlocking) { dr += 3; } 
+    if (scene.isBlocking) { dr += 6; }
     if (scene.isRaging)   { dr -= 3; } // Rage — takes more damage per hit
     dr = Math.max(0, dr);
 

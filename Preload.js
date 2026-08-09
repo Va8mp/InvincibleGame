@@ -33,10 +33,10 @@ function scenePreload(scene) {
     scene.load.image('Markhit2', 'MarkSprites/Hit/FirstAttack_01.png');
 
     scene.load.image('Markhit3', 'MarkSprites/Hit/SecondAttack_01.png');
-    scene.load.image('Markhit4', 'MarkSprites/Hit/SecondAttack_02.png');
+    scene.load.image('Markhit4', 'MarkSprites/Hit/SecondAttack_01.png');
 
     scene.load.image('Markhit5', 'MarkSprites/Hit/ThirdAttack_01.png');
-    scene.load.image('Markhit6', 'MarkSprites/Hit/ThirdAttack_02.png');
+    scene.load.image('Markhit6', 'MarkSprites/Hit/ThirdAttack_01.png');
 
     // Mark — Heavy Attack (unused for now, loaded for future use)
     scene.load.image('Markheavy1', 'MarkSprites/Hit/HeavyUAttack_00.png');
@@ -123,7 +123,7 @@ function scenePreload(scene) {
     scene.load.image('thug_walk1', 'Enemies/Thug_01/Walk_00.png');
     scene.load.image('thug_walk2', 'Enemies/Thug_01/Walk_01.png');
     scene.load.image('thug_walk3', 'Enemies/Thug_01/Walk_02.png');
-    scene.load.image('thug_walk4', 'Enemies/Thug_01/Walk_03.png');
+    scene.load.image('thug_walk4', 'Enemies/Thug_01/Walk_02.png');
 
     // Thug_01 — Hit / Stun
     scene.load.image('thug_hit1',  'Enemies/Thug_01/Hit_00.png');
@@ -143,7 +143,7 @@ function scenePreload(scene) {
     scene.load.image('thug02_walk3', 'Enemies/Thug_02/Walk_02.png');
 
     // ── Thug_02 — Hit / Stun ───────────────────────────────────────────────────────
-    scene.load.image('thug02_hit1', 'Enemies/Thug_02/Hit_00.png');
+    scene.load.image('thug02_hit1', 'Enemies/Thug_02/Hit_02.png');
     scene.load.image('thug02_hit2', 'Enemies/Thug_02/Hit_01.png');
     scene.load.image('thug02_hit3', 'Enemies/Thug_02/Hit_05.png');
 
@@ -161,6 +161,58 @@ function scenePreload(scene) {
 
     // ── Thug_02 — Impact ─────────────────────────────────────────────────────────
     scene.load.image('Enemyimpact1', 'Enemies/Thug_02/Impact_00.png');
+
+    // ── Thug_03 — melee / rolling attacker ──────────────────────────────────
+    scene.load.image('thug03_idle1', 'Enemies/Thug_03/Idle_00.png');
+    scene.load.image('thug03_idle2', 'Enemies/Thug_03/Idle_01.png');
+    scene.load.image('thug03_idle3', 'Enemies/Thug_03/Idle_02.png');
+
+    scene.load.image('thug03_walk1', 'Enemies/Thug_03/Walk_00.png');
+    scene.load.image('thug03_walk2', 'Enemies/Thug_03/Walk_01.png');
+    scene.load.image('thug03_walk3', 'Enemies/Thug_03/Walk_02.png');
+
+    scene.load.image('thug03_attack1', 'Enemies/Thug_03/Attack_00.png');
+    scene.load.image('thug03_attack2', 'Enemies/Thug_03/Attack_02.png');
+    scene.load.image('thug03_attack3', 'Enemies/Thug_03/Attack_05.png');
+
+    scene.load.image('thug03_roll1', 'Enemies/Thug_03/AttackRoll_00.png');
+    scene.load.image('thug03_roll2', 'Enemies/Thug_03/AttackRoll_01.png');
+    scene.load.image('thug03_roll3', 'Enemies/Thug_03/AttackRoll_02.png');
+
+    scene.load.image('thug03_stun1', 'Enemies/Thug_03/Kd_00.png');
+    scene.load.image('thug03_stun2', 'Enemies/Thug_03/Kd_01.png');
+
+    // ── Lord Bug boss ───────────────────────────────────────────────────────
+    scene.load.image('lordBug_idle1',  'Enemies/LordBug/Idle_00.png');
+    scene.load.image('lordBug_idle2',  'Enemies/LordBug/Idle_01.png');
+    scene.load.image('lordBug_idle3',  'Enemies/LordBug/Idle_02.png');
+    scene.load.image('lordBug_walk1',  'Enemies/LordBug/Walk_00.png');
+    scene.load.image('lordBug_walk2',  'Enemies/LordBug/Walk_04.png');
+    scene.load.image('lordBug_walk3',  'Enemies/LordBug/Walk_07.png');
+    scene.load.image('lordBug_throw1', 'Enemies/LordBug/ProjectileThrow_00.png');
+    scene.load.image('lordBug_throw2', 'Enemies/LordBug/ProjectileThrow_01.png');
+    scene.load.image('lordBug_throw3', 'Enemies/LordBug/ProjectileThrow_02.png');
+    scene.load.image('lordBug_throw4', 'Enemies/LordBug/ProjectileThrow_03.png');
+    scene.load.image('lordBug_projectile1', 'Enemies/LordBug/ProjectileActive_00.png');
+    scene.load.image('lordBug_projectile2', 'Enemies/LordBug/ProjectileActive_01.png');
+    scene.load.image('lordBug_projectile3', 'Enemies/LordBug/ProjectileActive_02.png');
+    scene.load.image('lordBug_dashStart', 'Enemies/LordBug/Negativerush_00.png');
+    scene.load.image('lordBug_dash1',  'Enemies/LordBug/Negativerush_04.png');
+    scene.load.image('lordBug_dash2',  'Enemies/LordBug/Negativerush_08.png');
+    scene.load.image('lordBug_dashRecover1', 'Enemies/LordBug/Negativerushend_01.png');
+    scene.load.image('lordBug_dashRecover2', 'Enemies/LordBug/Negativerushend_02.png');
+    scene.load.image('lordBug_melee1', 'Enemies/LordBug/Melee_00.png');
+    scene.load.image('lordBug_melee2', 'Enemies/LordBug/Melee_01.png');
+    scene.load.image('lordBug_melee3', 'Enemies/LordBug/Melee_02.png');
+    scene.load.image('lordBug_melee4', 'Enemies/LordBug/Melee_03.png');
+    scene.load.image('lordBug_melee5', 'Enemies/LordBug/Melee_04.png');
+    scene.load.image('lordBug_block1', 'Enemies/LordBug/Block_00.png');
+    scene.load.image('lordBug_block2', 'Enemies/LordBug/Block_01.png');
+    scene.load.image('lordBug_block3', 'Enemies/LordBug/Block_02.png');
+    scene.load.image('lordBug_block4', 'Enemies/LordBug/Block_03.png');
+    scene.load.image('lordBug_block5', 'Enemies/LordBug/Block_04.png');
+    scene.load.image('lordBug_hit1',   'Enemies/LordBug/Kd_00.png');
+    scene.load.image('lordBug_hit2',   'Enemies/LordBug/Kd_01.png');
 
     // Music — update path to match your file
     scene.load.audio('bgMusic', 'Assets/Music/Invincible_Street_01.mp3');

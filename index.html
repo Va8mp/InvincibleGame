@@ -23,6 +23,7 @@
 
     <!-- Game modules — ORDER MATTERS -->
     <script src="Preload.js"></script>
+    <script src="Settings.js"></script>
     <script src="HUD.js"></script>
     <script src="Eve.js"></script>
     <script src="Mark.js"></script>
@@ -39,7 +40,7 @@
                 width: 1920,
                 height: 1080,
                 pixelArt: true,
-                scene: [MainMenu, CharacterSelect, InvincibleGame],
+                scene: [MainMenu, OptionsMenu, CharacterSelect, InvincibleGame],
                 physics: {
                 default: 'arcade',
                 arcade: { gravity: { y: 0 } }
@@ -50,5 +51,3 @@
         </script>
     </body>
     </html>
-    </body>
-</html>

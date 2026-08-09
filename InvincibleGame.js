@@ -56,15 +56,13 @@ class InvincibleGame extends Phaser.Scene {
     }
 
     // -------------------------------------------------------------------------
-    preload() {
-        scenePreload(this); // Preload.js
-    }
-
-    // -------------------------------------------------------------------------
     create() {
-        // Which character was picked on the CharacterSelect screen ('eve' | 'mark').
-        // Falls back to Eve if the scene was ever started without going through select.
+        // Resolve the selected character before resetting stats so each fighter
+        // starts with the correct maximum HP on both first launch and restart.
         this.selectedCharacter = this.registry.get('selectedCharacter') || 'eve';
+
+        // scene.restart() reuses this scene instance, so reset every per-run value.
+        this.resetRunState();
 
         this.physics.world.setBounds(-300, 330, 2500, 730); // ← world bounds for Eve and enemies
 
@@ -80,19 +78,35 @@ class InvincibleGame extends Phaser.Scene {
         });
 
         // ── Music ─────────────────────────────────────────────────────────────
-        this.musicVolume = 0.5; // change starting volume here (0.0 – 1.0)
+        this.gameSettings = loadGameSettings();
+        applyGlobalAudioSettings(this, this.gameSettings);
+        this.musicVolume = this.gameSettings.musicVolume;
         this.bgMusic = this.sound.add('bgMusic', { loop: true, volume: this.musicVolume });
         this.bgMusic.play();
 
         // ── Sound Effects ─────────────────────────────────────────────────────────────
-        this.sdAbility = this.sound.add('sdAbility', { volume: 0.3 });
-        this.sdRocket = this.sound.add('sdRocket', { volume: 0.3 });
-        this.sdExplosion = this.sound.add('sdExplosion', { volume: 0.3 });
-        this.sdExplosion02 = this.sound.add('sdExplosion02', { volume: 0.3 });
-        this.sdEnemyDie = this.sound.add('sdEnemyDie', { volume: 0.3 });
-        this.sdFail = this.sound.add('sdFail', { volume: 0.3 });
-        this.sdBoxBreak = this.sound.add('sdBoxBreak', { volume: 0.3 });
-        this.sdSound = this.sound.add('sdSound', { volume: 0.3 });
+        const sfxVolume = this.gameSettings.sfxVolume;
+        this.sdAbility = this.sound.add('sdAbility', { volume: sfxVolume });
+        this.sdRocket = this.sound.add('sdRocket', { volume: sfxVolume });
+        this.sdExplosion = this.sound.add('sdExplosion', { volume: sfxVolume });
+        this.sdExplosion02 = this.sound.add('sdExplosion02', { volume: sfxVolume });
+        this.sdEnemyDie = this.sound.add('sdEnemyDie', { volume: sfxVolume });
+        this.sdFail = this.sound.add('sdFail', { volume: sfxVolume });
+        this.sdBoxBreak = this.sound.add('sdBoxBreak', { volume: sfxVolume });
+        this.sdSound = this.sound.add('sdSound', { volume: sfxVolume });
+
+        // Sound objects use Phaser's game-wide sound manager, so release this
+        // run's instances during scene shutdown after restart has been queued.
+        const runSounds = [
+            this.bgMusic, this.sdAbility, this.sdRocket, this.sdExplosion,
+            this.sdExplosion02, this.sdEnemyDie, this.sdFail,
+            this.sdBoxBreak, this.sdSound
+        ];
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            runSounds.forEach((sound) => {
+                if (sound && sound.destroy) sound.destroy();
+            });
+        });
 
         // ── Animations ────────────────────────────────────────────────────────
         if (this.selectedCharacter === 'mark') {
@@ -110,21 +124,7 @@ class InvincibleGame extends Phaser.Scene {
         }
 
         // ── Keyboard bindings ─────────────────────────────────────────────────
-        this.keys = this.input.keyboard.addKeys({
-            up:      Phaser.Input.Keyboard.KeyCodes.W,
-            down:    Phaser.Input.Keyboard.KeyCodes.S,
-            left:    Phaser.Input.Keyboard.KeyCodes.A,
-            right:   Phaser.Input.Keyboard.KeyCodes.D,
-            hit:     Phaser.Input.Keyboard.KeyCodes.H,
-            heavy:   Phaser.Input.Keyboard.KeyCodes.U,
-            shield:   Phaser.Input.Keyboard.KeyCodes.Y,
-            healing:   Phaser.Input.Keyboard.KeyCodes.I,
-            dodge:   Phaser.Input.Keyboard.KeyCodes.K,
-            pause:   Phaser.Input.Keyboard.KeyCodes.P,
-            volUp:   Phaser.Input.Keyboard.KeyCodes.PLUS,
-            volDown: Phaser.Input.Keyboard.KeyCodes.MINUS,
-            mute:    Phaser.Input.Keyboard.KeyCodes.M
-        });
+        this.keys = this.input.keyboard.addKeys(this.gameSettings.keybinds);
 
         // ── Physics groups ────────────────────────────────────────────────────
         this.projectiles = this.physics.add.group({ allowGravity: false });
@@ -145,19 +145,58 @@ class InvincibleGame extends Phaser.Scene {
         // ── HUD ───────────────────────────────────────────────────────────────
         createHUD(this);         // HUD.js
 
-        // ── Restart key ───────────────────────────────────────────────────────
-        this.input.keyboard.on('keydown-R', () => {
-            if (this.isGameOver) {
-                this.bgMusic.stop();
-                this.scene.restart();
-            }
-        });
+        // Polling a scene-owned key avoids accumulating global keyboard
+        // listeners each time this scene restarts.
+        this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    }
+
+    resetRunState() {
+        this.totalScore = 0;
+        this.maxHP = this.selectedCharacter === 'mark' ? 120 : 100;
+        this.currentHP = this.maxHP;
+        this.currentEnergy = this.maxEnergy;
+        this.comboStage = 0;
+        this.lastHitTime = 0;
+        this.isHeavyAttacking = false;
+        this.isRecovering = false;
+        this.isHealing = false;
+        this.isShielding = false;
+        this.isDodging = false;
+        this.isGameOver = false;
+        this.isRestarting = false;
+        this.isPaused = false;
+        this.isBlocking = false;
+        this.isDashAttacking = false;
+        this.isRaging = false;
+        this.markComboLocked = false;
+        this.hasShield = false;
+        this.isShieldActive = false;
+        this.hasHealing = false;
+        this.lastLeftPressTime = 0;
+        this.lastRightPressTime = 0;
+        this.isSprinting = false;
+        this.sprintDirection = '';
+        this.nextLordBugScore = 10;
+        this.nextEnergyRestoreScore = 500;
+        this.nextWaveNoticeScore = 250;
+        this.nextSupplyDropScore = 250;
+        this.lordBugBoss = null;
+        this.nextWaveText = null;
+        this.enemyGroup = null;
+        this.enemyProjectiles = null;
+        this.projectiles = null;
+        this.itemPickups = null;
     }
 
     // -------------------------------------------------------------------------
     update(time, delta) {
         // Cloud scroll (do not change)
         this.cloud.tilePositionX += 0.5;
+
+        if (this.isGameOver && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+            restartCurrentGame(this);
+            return;
+        }
 
         // P → toggle pause (not available once the game is over)
         if (!this.isGameOver && Phaser.Input.Keyboard.JustDown(this.keys.pause)) {
@@ -227,4 +266,27 @@ function triggerGameOver(scene) {
     });
 
     showGameOver(scene); // defined in HUD.js
+}
+
+function restartCurrentGame(scene) {
+    if (!scene.isGameOver || scene.isRestarting) return;
+    scene.isRestarting = true;
+    scene.isGameOver = true;
+
+    // Prevent two pointer/key events from scheduling overlapping restarts.
+    if (scene.restartButton) scene.restartButton.disableInteractive();
+
+    // Stop old-run activity. Phaser's scene shutdown owns the destruction of
+    // timers, sounds, display objects, and physics bodies; destroying those
+    // manually during a pointer callback could leave a half-shut-down scene.
+    scene.tweens.killAll();
+    scene.time.paused = false;
+    scene.physics.resume();
+    scene.sound.stopAll();
+
+    // Leave the current input dispatch before restarting. This makes mouse and
+    // keyboard restarts follow the same safe path and prevents the freeze.
+    window.setTimeout(() => {
+        if (scene.scene) scene.scene.restart();
+    }, 0);
 }

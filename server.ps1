@@ -67,6 +67,24 @@ while ($listener.IsListening) {
         $contentType = $mimeTypes[$ext]
         if (-not $contentType) { $contentType = "application/octet-stream" }
         $response.ContentType = $contentType
+        $fileInfo = Get-Item $filePath
+        $lastModified = $fileInfo.LastWriteTimeUtc.ToString("R")
+        $etag = '"' + $fileInfo.Length + '-' + $fileInfo.LastWriteTimeUtc.Ticks + '"'
+
+        # Large immutable game assets should stay in the browser cache between launches.
+        if ($ext -in @('.mp3', '.wav', '.ogg', '.png', '.jpg', '.jpeg', '.gif', '.otf', '.ttf', '.woff', '.woff2')) {
+            $response.Headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        } else {
+            $response.Headers['Cache-Control'] = 'no-cache'
+        }
+        $response.Headers['ETag'] = $etag
+        $response.Headers['Last-Modified'] = $lastModified
+
+        if ($request.Headers['If-None-Match'] -eq $etag) {
+            $response.StatusCode = 304
+            $response.OutputStream.Close()
+            continue
+        }
         try {
             $bytes = [System.IO.File]::ReadAllBytes($filePath)
             $response.ContentLength64 = $bytes.Length

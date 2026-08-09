@@ -23,6 +23,7 @@ function createHUD(scene) {
     // ──────────────────────────────────────────────────────────────────────────────────
     // Logo next to the HP bar — shows whichever character is currently selected.
     const isMark = scene.selectedCharacter === 'mark';
+    const binding = (action) => keyNameFromCode(scene.gameSettings.keybinds[action]);
     scene.eveHP = scene.add.image(255, 145, isMark ? 'markHPLogo' : 'eveHPLogo')
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
@@ -39,7 +40,8 @@ function createHUD(scene) {
         .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
 
     // HP text shifted right inside the HP
-    scene.hudText = scene.add.text(325, 125, (isMark ? 'MARK' : 'EVE') + '  HP: 100 / 100', {
+    scene.hudText = scene.add.text(325, 125,
+        (isMark ? 'MARK' : 'EVE') + '  HP: ' + scene.currentHP + ' / ' + scene.maxHP, {
         fontFamily: 'Pixelated', fontSize: '18px', color: '#ffffff'
     }).setScrollFactor(0).setDepth(23);
     // ──────────────────────────────────────────────────────────────────────────────────
@@ -67,7 +69,8 @@ function createHUD(scene) {
     scene.volBar = scene.add.rectangle(1400, 145, 220 * scene.musicVolume, 14, 0xffdd00)
         .setOrigin(0, 0).setScrollFactor(0).setDepth(22);
 
-    scene.volText = scene.add.text(1400, 124, 'VOL:  +  /  -  |  M: mute', {
+    scene.volText = scene.add.text(1400, 124,
+        `VOL: ${binding('volUp')} / ${binding('volDown')} | ${binding('mute')}: mute`, {
         fontFamily: 'Pixelated', fontSize: '15px', color: '#ffffff'
     }).setScrollFactor(0).setDepth(23);
     // ──────────────────────────────────────────────────────────────────────────────────
@@ -99,9 +102,18 @@ function createHUD(scene) {
         fontFamily: 'Pixelated', fontSize: '36px', color: '#ffaaaa', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
 
-    scene.gameOverHint = scene.add.text(960, 660, 'Press  R  to restart', {
+    scene.gameOverHint = scene.add.text(960, 675, 'Press R or click the button', {
         fontFamily: 'Pixelated', fontSize: '28px', color: '#ffffff', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51).setVisible(false);
+
+    scene.restartButton = scene.add.text(960, 760, '[ RESTART ]', {
+        fontFamily: 'Pixelated', fontSize: '44px', color: '#ffffff',
+        backgroundColor: '#991111', padding: { x: 34, y: 16 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(52).setVisible(false)
+      .setInteractive({ useHandCursor: true });
+    scene.restartButton.on('pointerover', () => scene.restartButton.setStyle({ color: '#ffdd00' }));
+    scene.restartButton.on('pointerout', () => scene.restartButton.setStyle({ color: '#ffffff' }));
+    scene.restartButton.on('pointerdown', () => restartCurrentGame(scene));
 
     // ── Pause Overlay (hidden until P is pressed) ─────────────────────────────
     createPauseOverlay(scene);
@@ -109,6 +121,10 @@ function createHUD(scene) {
     // ──────────────────────────────────────────────────────────────────────────────────
 
 function createPauseOverlay(scene) {
+    // This helper must live in this function because the move lists below are
+    // constructed here, outside createHUD's local scope.
+    const binding = (action) => keyNameFromCode(scene.gameSettings.keybinds[action]);
+
     scene.pauseOverlay = scene.add.rectangle(960, 540, 1920, 1080, 0x000000, 0.82)
         .setScrollFactor(0).setDepth(60).setVisible(false);
 
@@ -121,7 +137,7 @@ function createPauseOverlay(scene) {
         align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(61).setVisible(false);
 
-    scene.pauseHint = scene.add.text(960, 990, 'Press  P  to resume', {
+    scene.pauseHint = scene.add.text(960, 990, `Press ${binding('pause')} to resume`, {
         fontFamily: 'Pixelated', fontSize: '30px', color: '#ffdd00', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(61).setVisible(false);
 
@@ -133,14 +149,14 @@ function createPauseOverlay(scene) {
     }).setScrollFactor(0).setDepth(61).setVisible(false);
 
     const eveMoves =
-        'WASD          Move\n' +
-        'H             Light Combo (3 hits)\n' +
-        'U             Heavy Attack (fires a projectile)\n' +
-        '2x-tap A/D    Sprint Dodge\n' +
-        'K + W/S       Lane Dodge\n' +
-        'Y             Shield  (unlocks at 100 score)\n' +
-        'I             Healing (unlocks at 200 score)\n' +
-        '+ / -         Volume   M  Mute';
+        `${binding('up')}/${binding('left')}/${binding('down')}/${binding('right')}          Move\n` +
+        `${binding('hit')}             Light Combo (3 hits)\n` +
+        `${binding('heavy')}             Heavy Attack (fires a projectile)\n` +
+        `2x-tap ${binding('left')}/${binding('right')}    Sprint Dodge\n` +
+        `${binding('dodge')} + ${binding('up')}/${binding('down')}       Lane Dodge\n` +
+        `${binding('shield')}             Shield  (unlocks at 100 score)\n` +
+        `${binding('healing')}             Healing (unlocks at 200 score)\n` +
+        `${binding('volUp')} / ${binding('volDown')}         Volume   ${binding('mute')}  Mute`;
 
     scene.pauseEveText = scene.add.text(280, 320, eveMoves, {
         fontFamily: 'Pixelated', fontSize: '22px', color: '#ffffff',
@@ -153,16 +169,16 @@ function createPauseOverlay(scene) {
     }).setScrollFactor(0).setDepth(61).setVisible(false);
 
     const markMoves =
-        'WASD          Move\n' +
-        'H             Light Combo (3 hits — must\n' +
+        `${binding('up')}/${binding('left')}/${binding('down')}/${binding('right')}          Move\n` +
+        `${binding('hit')}             Light Combo (3 hits — must\n` +
         '              connect to continue the combo)\n' +
-        'U             Heavy Attack (knockback,\n' +
+        `${binding('heavy')}             Heavy Attack (knockback,\n` +
         '              plays out fully, no canceling)\n' +
-        'Y + A/D held  Dash Attack (charges forward, unlocks at 100 score)\n' +
-        'K (hold)      Block, release to stop\n' +
-        'I             Rage Mode — 10s, +5 damage dealt,\n' +
+        `${binding('shield')} + ${binding('left')}/${binding('right')} held  Dash Attack (charges forward, unlocks at 100 score)\n` +
+        `${binding('dodge')} (hold)      Block, release to stop\n` +
+        `${binding('healing')}             Rage Mode — 10s, +5 damage dealt,\n` +
         '              -3 extra damage taken (unlocks at 200 score)\n' +
-        '+ / -         Volume   M  Mute';
+        `${binding('volUp')} / ${binding('volDown')}         Volume   ${binding('mute')}  Mute`;
 
     scene.pauseMarkText = scene.add.text(1280, 320, markMoves, {
         fontFamily: 'Pixelated', fontSize: '22px', color: '#ffffff',
@@ -206,8 +222,8 @@ function updateHUD(scene) {
 
     scene.hudScore.setText('Total Score: ' + scene.totalScore); //Updates total Score.
 
-    if (scene.currentHP > 100) {
-        scene.currentHP = 100;
+    if (scene.currentHP > scene.maxHP) {
+        scene.currentHP = scene.maxHP;
     }
 
     if (scene.totalScore == 100) {
@@ -261,6 +277,8 @@ function showGameOver(scene) {
     scene.gameOverOverlay.setVisible(true);
     scene.gameOverTitle.setVisible(true);
     scene.totalScoreEnd.setVisible(true);
+    scene.gameOverHint.setVisible(true);
+    scene.restartButton.setVisible(true);
 
     if (scene.selectedCharacter === 'mark') {
         scene.gameOverSubMark.setVisible(true);

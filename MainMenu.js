@@ -4,11 +4,16 @@ class MainMenu extends Phaser.Scene {
     }
 
     preload() {
-        // Call your external function from Preload.js and pass 'this' scene into it
+        // Load the shared assets only once for this browser session. Returning
+        // from Options or restarting a run reuses Phaser's caches.
+        if (this.registry.get('coreAssetsLoaded')) return;
         scenePreload(this);
+        this.load.once('complete', () => this.registry.set('coreAssetsLoaded', true));
     }
 
     create() {
+        const settings = loadGameSettings();
+        applyGlobalAudioSettings(this, settings);
         // 1. Background Setup
         let bg = this.add.image(960, 540, 'menuSKY');
         bg.setTint(0x666666); // Darkens background slightly so text pops
@@ -17,12 +22,13 @@ class MainMenu extends Phaser.Scene {
         // Only start if it's not already playing
         if (!this.sound.get('menuMusic')) {
             this.bgm = this.sound.add('menuMusic', {
-                volume: 0.3,
+                volume: settings.musicVolume,
                 loop: true
             });
             this.bgm.play();
         } else {
             this.bgm = this.sound.get('menuMusic');
+            this.bgm.setVolume(settings.musicVolume);
             if (!this.bgm.isPlaying) {
                 this.bgm.play();
             }
@@ -105,20 +111,12 @@ class MainMenu extends Phaser.Scene {
             optionsBtn.setStyle({ fill: '#ffffff' });
         });
 
-        // CLICK EVENT: Launches the game scene when clicked!
+        // CLICK EVENT: Opens the two-tab options screen.
         optionsBtn.on('pointerdown', () => {
             if (this.bgm) {
                 this.bgm.stop();
             }
-            this.scene.start('InvincibleGame');
+            this.scene.start('OptionsMenu');
         });
-
-        const startGameAction = () => {
-            // Optional: Stop or fade menu music before switching scenes
-            if (this.bgm) {
-                this.bgm.stop(); 
-            }
-            this.scene.start('InvincibleGame');
-        };
     }
 }

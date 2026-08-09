@@ -345,9 +345,9 @@ function eveTriggerShield(scene) {
     scene.isShielding = true;
     scene.isShieldActive = true;
 
-    // Boost damage reduction (+9 so 3 becomes 12)
+    // Boost damage reduction (+12 so Eve's base 3 becomes 15)
     const baseDR = scene.damageReduction;
-    scene.damageReduction = baseDR + 9;
+    scene.damageReduction = baseDR + 12;
 
     //Reduces Mana by -20
     scene.currentEnergy = scene.currentEnergy - 20;
@@ -495,15 +495,29 @@ function eveTakeDamage(scene, rawAmount) {
 function eveSetVolume(scene, vol) {
     scene.musicVolume = Math.round(vol * 10) / 10;
     scene.bgMusic.setVolume(scene.musicVolume);
+    if (scene.gameSettings) {
+        scene.gameSettings.musicVolume = scene.musicVolume;
+        scene.gameSettings.muted = false;
+        scene.sound.mute = false;
+        saveGameSettings(scene.gameSettings);
+    }
     updateVolHUD(scene); // defined in HUD.js
 }
 
 function eveToggleMute(scene) {
-    if (scene.bgMusic.volume > 0) {
+    if (!scene.sound.mute) {
         scene._preMuteVolume = scene.musicVolume;
-        eveSetVolume(scene, 0);
+        scene.sound.mute = true;
+        if (scene.gameSettings) {
+            scene.gameSettings.muted = true;
+            saveGameSettings(scene.gameSettings);
+        }
     } else {
-        eveSetVolume(scene, scene._preMuteVolume || 0.5);
+        scene.sound.mute = false;
+        if (scene.gameSettings) {
+            scene.gameSettings.muted = false;
+            saveGameSettings(scene.gameSettings);
+        }
     }
 }
 
