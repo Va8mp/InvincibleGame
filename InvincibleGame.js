@@ -176,7 +176,7 @@ class InvincibleGame extends Phaser.Scene {
         this.lastRightPressTime = 0;
         this.isSprinting = false;
         this.sprintDirection = '';
-        this.nextLordBugScore = 10;
+        this.nextLordBugScore = 300;
         this.nextEnergyRestoreScore = 500;
         this.nextWaveNoticeScore = 250;
         this.nextSupplyDropScore = 250;
